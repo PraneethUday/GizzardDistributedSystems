@@ -1,111 +1,111 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL = "http://localhost:8000";
 
 function App() {
   // Create User form state
   const [createForm, setCreateForm] = useState({
-    id: '',
-    name: '',
-    email: ''
-  })
-  const [createResult, setCreateResult] = useState(null)
-  const [createError, setCreateError] = useState(null)
-  const [createLoading, setCreateLoading] = useState(false)
+    id: "",
+    name: "",
+    email: "",
+  });
+  const [createResult, setCreateResult] = useState(null);
+  const [createError, setCreateError] = useState(null);
+  const [createLoading, setCreateLoading] = useState(false);
 
   // Fetch User form state
-  const [fetchId, setFetchId] = useState('')
-  const [fetchResult, setFetchResult] = useState(null)
-  const [fetchError, setFetchError] = useState(null)
-  const [fetchLoading, setFetchLoading] = useState(false)
+  const [fetchId, setFetchId] = useState("");
+  const [fetchResult, setFetchResult] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
+  const [fetchLoading, setFetchLoading] = useState(false);
 
   // All Users state
-  const [allUsers, setAllUsers] = useState([])
-  const [allUsersLoading, setAllUsersLoading] = useState(false)
+  const [allUsers, setAllUsers] = useState([]);
+  const [allUsersLoading, setAllUsersLoading] = useState(false);
 
   // Shard status
-  const [shardStatus, setShardStatus] = useState([])
-  const [shardLoading, setShardLoading] = useState(false)
+  const [shardStatus, setShardStatus] = useState([]);
+  const [shardLoading, setShardLoading] = useState(false);
 
   // Load shard status and users on mount
   useEffect(() => {
-    loadShardStatus()
-    loadAllUsers()
-  }, [])
+    loadShardStatus();
+    loadAllUsers();
+  }, []);
 
   const loadShardStatus = async () => {
-    setShardLoading(true)
+    setShardLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/shards`)
-      setShardStatus(response.data.shards || [])
+      const response = await axios.get(`${API_BASE_URL}/shards`);
+      setShardStatus(response.data.shards || []);
     } catch (err) {
-      console.error('Failed to load shard status:', err)
+      console.error("Failed to load shard status:", err);
     } finally {
-      setShardLoading(false)
+      setShardLoading(false);
     }
-  }
+  };
 
   const loadAllUsers = async () => {
-    setAllUsersLoading(true)
+    setAllUsersLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/users`)
-      setAllUsers(response.data.users || [])
+      const response = await axios.get(`${API_BASE_URL}/users`);
+      setAllUsers(response.data.users || []);
     } catch (err) {
-      console.error('Failed to load users:', err)
+      console.error("Failed to load users:", err);
     } finally {
-      setAllUsersLoading(false)
+      setAllUsersLoading(false);
     }
-  }
+  };
 
   const handleCreateUser = async (e) => {
-    e.preventDefault()
-    setCreateLoading(true)
-    setCreateError(null)
-    setCreateResult(null)
+    e.preventDefault();
+    setCreateLoading(true);
+    setCreateError(null);
+    setCreateResult(null);
 
     try {
       const response = await axios.post(`${API_BASE_URL}/users`, {
         id: parseInt(createForm.id),
         name: createForm.name,
-        email: createForm.email
-      })
-      setCreateResult(response.data)
-      setCreateForm({ id: '', name: '', email: '' })
+        email: createForm.email,
+      });
+      setCreateResult(response.data);
+      setCreateForm({ id: "", name: "", email: "" });
       // Refresh data
-      loadShardStatus()
-      loadAllUsers()
+      loadShardStatus();
+      loadAllUsers();
     } catch (err) {
-      setCreateError(err.response?.data?.error || err.message)
+      setCreateError(err.response?.data?.error || err.message);
     } finally {
-      setCreateLoading(false)
+      setCreateLoading(false);
     }
-  }
+  };
 
   const handleFetchUser = async (e) => {
-    e.preventDefault()
-    setFetchLoading(true)
-    setFetchError(null)
-    setFetchResult(null)
+    e.preventDefault();
+    setFetchLoading(true);
+    setFetchError(null);
+    setFetchResult(null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/users/${fetchId}`)
-      setFetchResult(response.data)
+      const response = await axios.get(`${API_BASE_URL}/users/${fetchId}`);
+      setFetchResult(response.data);
     } catch (err) {
       if (err.response?.status === 404) {
-        setFetchError('User not found')
+        setFetchError("User not found");
       } else {
-        setFetchError(err.response?.data?.error || err.message)
+        setFetchError(err.response?.data?.error || err.message);
       }
     } finally {
-      setFetchLoading(false)
+      setFetchLoading(false);
     }
-  }
+  };
 
   const getShardColor = (shardId) => {
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
-    return colors[(shardId - 1) % colors.length]
-  }
+    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
+    return colors[(shardId - 1) % colors.length];
+  };
 
   return (
     <div className="app">
@@ -118,8 +118,12 @@ function App() {
         {/* Shard Status */}
         <section className="section shard-status">
           <h2>Shard Status</h2>
-          <button onClick={loadShardStatus} disabled={shardLoading} className="refresh-btn">
-            {shardLoading ? 'Loading...' : 'Refresh'}
+          <button
+            onClick={loadShardStatus}
+            disabled={shardLoading}
+            className="refresh-btn"
+          >
+            {shardLoading ? "Loading..." : "Refresh"}
           </button>
           <div className="shard-grid">
             {shardStatus.map((shard) => (
@@ -128,13 +132,22 @@ function App() {
                 className={`shard-card ${shard.status}`}
                 style={{ borderColor: getShardColor(shard.shard_id) }}
               >
-                <div className="shard-header" style={{ backgroundColor: getShardColor(shard.shard_id) }}>
+                <div
+                  className="shard-header"
+                  style={{ backgroundColor: getShardColor(shard.shard_id) }}
+                >
                   Shard {shard.shard_id}
                 </div>
                 <div className="shard-body">
-                  <p><strong>Status:</strong> {shard.status}</p>
-                  <p><strong>Port:</strong> {shard.port}</p>
-                  <p><strong>Users:</strong> {shard.user_count}</p>
+                  <p>
+                    <strong>Status:</strong> {shard.status}
+                  </p>
+                  <p>
+                    <strong>Port:</strong> {shard.port}
+                  </p>
+                  <p>
+                    <strong>Users:</strong> {shard.user_count}
+                  </p>
                 </div>
               </div>
             ))}
@@ -151,19 +164,28 @@ function App() {
                 <input
                   type="number"
                   value={createForm.id}
-                  onChange={(e) => setCreateForm({ ...createForm, id: e.target.value })}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, id: e.target.value })
+                  }
                   placeholder="Enter User ID"
                   required
                   min="1"
                 />
-                <small>Shard assignment: User {createForm.id || '?'} → Shard {createForm.id ? ((parseInt(createForm.id) - 1) % 4) + 1 : '?'}</small>
+                <small>
+                  Shard assignment: User {createForm.id || "?"} → Shard{" "}
+                  {createForm.id
+                    ? ((parseInt(createForm.id) - 1) % 4) + 1
+                    : "?"}
+                </small>
               </div>
               <div className="form-group">
                 <label>Name:</label>
                 <input
                   type="text"
                   value={createForm.name}
-                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, name: e.target.value })
+                  }
                   placeholder="Enter Name"
                   required
                 />
@@ -173,23 +195,38 @@ function App() {
                 <input
                   type="email"
                   value={createForm.email}
-                  onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, email: e.target.value })
+                  }
                   placeholder="Enter Email"
                   required
                 />
               </div>
-              <button type="submit" disabled={createLoading} className="submit-btn">
-                {createLoading ? 'Creating...' : 'Create User'}
+              <button
+                type="submit"
+                disabled={createLoading}
+                className="submit-btn"
+              >
+                {createLoading ? "Creating..." : "Create User"}
               </button>
             </form>
 
             {createResult && (
               <div className="result success">
                 <h4>User Created Successfully!</h4>
-                <p><strong>ID:</strong> {createResult.user?.id}</p>
-                <p><strong>Name:</strong> {createResult.user?.name}</p>
-                <p><strong>Email:</strong> {createResult.user?.email}</p>
-                <p className="shard-info" style={{ color: getShardColor(createResult.shard_id) }}>
+                <p>
+                  <strong>ID:</strong> {createResult.user?.id}
+                </p>
+                <p>
+                  <strong>Name:</strong> {createResult.user?.name}
+                </p>
+                <p>
+                  <strong>Email:</strong> {createResult.user?.email}
+                </p>
+                <p
+                  className="shard-info"
+                  style={{ color: getShardColor(createResult.shard_id) }}
+                >
                   Stored in Shard {createResult.shard_id}
                 </p>
               </div>
@@ -217,20 +254,36 @@ function App() {
                   required
                   min="1"
                 />
-                <small>Will query Shard {fetchId ? ((parseInt(fetchId) - 1) % 4) + 1 : '?'}</small>
+                <small>
+                  Will query Shard{" "}
+                  {fetchId ? ((parseInt(fetchId) - 1) % 4) + 1 : "?"}
+                </small>
               </div>
-              <button type="submit" disabled={fetchLoading} className="submit-btn">
-                {fetchLoading ? 'Fetching...' : 'Fetch User'}
+              <button
+                type="submit"
+                disabled={fetchLoading}
+                className="submit-btn"
+              >
+                {fetchLoading ? "Fetching..." : "Fetch User"}
               </button>
             </form>
 
             {fetchResult && (
               <div className="result success">
                 <h4>User Found!</h4>
-                <p><strong>ID:</strong> {fetchResult.user?.id}</p>
-                <p><strong>Name:</strong> {fetchResult.user?.name}</p>
-                <p><strong>Email:</strong> {fetchResult.user?.email}</p>
-                <p className="shard-info" style={{ color: getShardColor(fetchResult.shard_id) }}>
+                <p>
+                  <strong>ID:</strong> {fetchResult.user?.id}
+                </p>
+                <p>
+                  <strong>Name:</strong> {fetchResult.user?.name}
+                </p>
+                <p>
+                  <strong>Email:</strong> {fetchResult.user?.email}
+                </p>
+                <p
+                  className="shard-info"
+                  style={{ color: getShardColor(fetchResult.shard_id) }}
+                >
                   Retrieved from Shard {fetchResult.shard_id}
                 </p>
               </div>
@@ -248,10 +301,14 @@ function App() {
         {/* All Users Section */}
         <section className="section users-section">
           <h2>All Users</h2>
-          <button onClick={loadAllUsers} disabled={allUsersLoading} className="refresh-btn">
-            {allUsersLoading ? 'Loading...' : 'Refresh'}
+          <button
+            onClick={loadAllUsers}
+            disabled={allUsersLoading}
+            className="refresh-btn"
+          >
+            {allUsersLoading ? "Loading..." : "Refresh"}
           </button>
-          
+
           {allUsers.length === 0 ? (
             <p className="no-users">No users found. Create some users above!</p>
           ) : (
@@ -272,9 +329,11 @@ function App() {
                       <td>{user.name}</td>
                       <td>{user.email}</td>
                       <td>
-                        <span 
+                        <span
                           className="shard-badge"
-                          style={{ backgroundColor: getShardColor(user.shard_id) }}
+                          style={{
+                            backgroundColor: getShardColor(user.shard_id),
+                          }}
                         >
                           Shard {user.shard_id}
                         </span>
@@ -291,7 +350,7 @@ function App() {
         <section className="section architecture">
           <h2>Architecture</h2>
           <pre className="diagram">
-{`
+            {`
               Client (React App)
                      |
                      v
@@ -313,7 +372,7 @@ function App() {
         </section>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

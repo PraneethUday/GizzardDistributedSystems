@@ -70,6 +70,7 @@ make build
 ```
 
 **Expected Output:**
+
 ```
 Building node server...
 Building gateway server...
@@ -85,6 +86,7 @@ make run-all
 ```
 
 **Expected Output:**
+
 ```
 Starting shard nodes and gateway...
 Starting Node 1 on port 8001...
@@ -106,6 +108,7 @@ npm run dev
 ```
 
 **Expected Output:**
+
 ```
   VITE v5.4.21  ready in 332 ms
 
@@ -131,6 +134,7 @@ cd distributed-sharding
 ```
 
 **Output:**
+
 ```
 [GIN-debug] Listening and serving HTTP on :8001
 Shard Node 1 running on port 8001
@@ -166,6 +170,7 @@ cd distributed-sharding
 ```
 
 **Output:**
+
 ```
 [GIN-debug] Listening and serving HTTP on :8000
 API Gateway running on port 8000
@@ -193,6 +198,7 @@ curl -X POST http://localhost:8000/users \
 ```
 
 **Expected Output:**
+
 ```json
 {
   "message": "User created successfully",
@@ -213,6 +219,7 @@ curl -X POST http://localhost:8000/users \
 ```
 
 **Expected Output:**
+
 ```json
 {
   "message": "User created successfully",
@@ -233,6 +240,7 @@ curl -X POST http://localhost:8000/users \
 ```
 
 **Expected Output:**
+
 ```json
 {
   "message": "User created successfully",
@@ -252,6 +260,7 @@ curl http://localhost:8000/users/1
 ```
 
 **Expected Output:**
+
 ```json
 {
   "user": {
@@ -270,12 +279,13 @@ curl http://localhost:8000/users
 ```
 
 **Expected Output:**
+
 ```json
 {
   "users": [
-    {"id": 1, "name": "Alice", "email": "alice@example.com", "shard": 1},
-    {"id": 5, "name": "Eve", "email": "eve@example.com", "shard": 1},
-    {"id": 2, "name": "Bob", "email": "bob@example.com", "shard": 2}
+    { "id": 1, "name": "Alice", "email": "alice@example.com", "shard": 1 },
+    { "id": 5, "name": "Eve", "email": "eve@example.com", "shard": 1 },
+    { "id": 2, "name": "Bob", "email": "bob@example.com", "shard": 2 }
   ],
   "total": 3
 }
@@ -288,13 +298,14 @@ curl http://localhost:8000/shards
 ```
 
 **Expected Output:**
+
 ```json
 {
   "shards": [
-    {"id": 1, "port": 8001, "status": "online", "user_count": 2},
-    {"id": 2, "port": 8002, "status": "online", "user_count": 1},
-    {"id": 3, "port": 8003, "status": "online", "user_count": 0},
-    {"id": 4, "port": 8004, "status": "online", "user_count": 0}
+    { "id": 1, "port": 8001, "status": "online", "user_count": 2 },
+    { "id": 2, "port": 8002, "status": "online", "user_count": 1 },
+    { "id": 3, "port": 8003, "status": "online", "user_count": 0 },
+    { "id": 4, "port": 8004, "status": "online", "user_count": 0 }
   ]
 }
 ```
@@ -309,14 +320,14 @@ The system uses consistent hashing to determine which shard stores each user:
 Shard Number = ((userID - 1) % 4) + 1
 ```
 
-| User ID | Calculation | Shard |
-|---------|-------------|-------|
-| 1       | (1-1) % 4 + 1 = 1 | Shard 1 |
-| 2       | (2-1) % 4 + 1 = 2 | Shard 2 |
-| 3       | (3-1) % 4 + 1 = 3 | Shard 3 |
-| 4       | (4-1) % 4 + 1 = 4 | Shard 4 |
-| 5       | (5-1) % 4 + 1 = 1 | Shard 1 |
-| 6       | (6-1) % 4 + 1 = 2 | Shard 2 |
+| User ID | Calculation         | Shard   |
+| ------- | ------------------- | ------- |
+| 1       | (1-1) % 4 + 1 = 1   | Shard 1 |
+| 2       | (2-1) % 4 + 1 = 2   | Shard 2 |
+| 3       | (3-1) % 4 + 1 = 3   | Shard 3 |
+| 4       | (4-1) % 4 + 1 = 4   | Shard 4 |
+| 5       | (5-1) % 4 + 1 = 1   | Shard 1 |
+| 6       | (6-1) % 4 + 1 = 2   | Shard 2 |
 | 100     | (100-1) % 4 + 1 = 4 | Shard 4 |
 
 ---
@@ -324,21 +335,25 @@ Shard Number = ((userID - 1) % 4) + 1
 ## Frontend Features
 
 ### 1. Create User Form
+
 - Enter User ID, Name, and Email
 - Shows which shard the user was stored in
 - Displays success/error messages
 
 ### 2. Fetch User Form
+
 - Look up any user by ID
 - Shows user details and shard location
 
 ### 3. Shard Status Dashboard
+
 - Visual grid showing all 4 shards
 - User count per shard
 - Online/offline status indicators
 - Color-coded shard cards
 
 ### 4. All Users Table
+
 - Aggregated view of all users across shards
 - Color-coded shard badges
 - Sortable columns
@@ -375,6 +390,7 @@ make clean
 ```
 
 This removes:
+
 - `./bin/` directory
 - `./data/` directory (all SQLite databases)
 - `./server` binary
@@ -414,6 +430,7 @@ CGO_ENABLED=1 go build -o bin/gateway ./cmd/gateway
 ### Database Locked
 
 If you see "database is locked" errors:
+
 ```bash
 # Remove data directory and restart
 rm -rf data/
@@ -424,12 +441,12 @@ make run-all
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/users` | Create a new user |
-| GET | `/users/:id` | Get user by ID |
-| GET | `/users` | Get all users from all shards |
-| GET | `/shards` | Get shard status information |
+| Method | Endpoint     | Description                   |
+| ------ | ------------ | ----------------------------- |
+| POST   | `/users`     | Create a new user             |
+| GET    | `/users/:id` | Get user by ID                |
+| GET    | `/users`     | Get all users from all shards |
+| GET    | `/shards`    | Get shard status information  |
 
 ---
 
@@ -438,22 +455,26 @@ make run-all
 To run shards on different machines:
 
 ### Machine 1 (Gateway + Shard 1)
+
 ```bash
 ./bin/node -shard=1 -port=8001 -data=./data &
 ./bin/gateway -port=8000 -nodes="localhost:8001,192.168.1.102:8002,192.168.1.103:8003,192.168.1.104:8004"
 ```
 
 ### Machine 2 (Shard 2)
+
 ```bash
 ./bin/node -shard=2 -port=8002 -data=./data
 ```
 
 ### Machine 3 (Shard 3)
+
 ```bash
 ./bin/node -shard=3 -port=8003 -data=./data
 ```
 
 ### Machine 4 (Shard 4)
+
 ```bash
 ./bin/node -shard=4 -port=8004 -data=./data
 ```
@@ -463,13 +484,17 @@ To run shards on different machines:
 ## Screenshots
 
 ### React Dashboard
+
 The frontend provides a visual interface showing:
+
 - Real-time shard status
 - User distribution across shards
 - Create/fetch user forms with instant feedback
 
 ### Expected Browser View
+
 When you open http://localhost:3000, you'll see:
+
 1. **Header**: "Distributed Sharding System" title
 2. **Shard Status Grid**: 4 colored cards (green for online, gray for offline)
 3. **Forms Section**: Create User and Fetch User side by side
@@ -480,11 +505,11 @@ When you open http://localhost:3000, you'll see:
 
 ## Summary
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| Frontend | 3000 | React UI |
-| Gateway | 8000 | API routing |
-| Node 1 | 8001 | Shard 1 (users 1,5,9...) |
-| Node 2 | 8002 | Shard 2 (users 2,6,10...) |
-| Node 3 | 8003 | Shard 3 (users 3,7,11...) |
-| Node 4 | 8004 | Shard 4 (users 4,8,12...) |
+| Service  | Port | Purpose                   |
+| -------- | ---- | ------------------------- |
+| Frontend | 3000 | React UI                  |
+| Gateway  | 8000 | API routing               |
+| Node 1   | 8001 | Shard 1 (users 1,5,9...)  |
+| Node 2   | 8002 | Shard 2 (users 2,6,10...) |
+| Node 3   | 8003 | Shard 3 (users 3,7,11...) |
+| Node 4   | 8004 | Shard 4 (users 4,8,12...) |
