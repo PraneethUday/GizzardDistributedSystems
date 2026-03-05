@@ -11,6 +11,7 @@ Install the following before proceeding:
 ### 1. Install Go (1.21+)
 
 **macOS:**
+
 ```bash
 brew install go
 ```
@@ -19,12 +20,14 @@ brew install go
 Download from https://golang.org/dl/
 
 **Linux:**
+
 ```bash
 sudo apt update
 sudo apt install golang-go
 ```
 
 Verify installation:
+
 ```bash
 go version
 ```
@@ -32,6 +35,7 @@ go version
 ### 2. Install Node.js (18+)
 
 **macOS:**
+
 ```bash
 brew install node
 ```
@@ -40,6 +44,7 @@ brew install node
 Download from https://nodejs.org/
 
 Verify installation:
+
 ```bash
 node --version
 npm --version
@@ -48,11 +53,13 @@ npm --version
 ### 3. Install GCC (Required for SQLite compilation)
 
 **macOS:**
+
 ```bash
 xcode-select --install
 ```
 
 **Linux:**
+
 ```bash
 sudo apt install build-essential
 ```
@@ -63,6 +70,7 @@ Install MinGW or use WSL.
 ### 4. Install Git
 
 **macOS:**
+
 ```bash
 brew install git
 ```
@@ -88,6 +96,7 @@ go mod download
 ```
 
 This downloads all Go dependencies including:
+
 - Gin web framework
 - SQLite driver
 
@@ -100,12 +109,14 @@ make build
 ```
 
 **Expected output:**
+
 ```
 Building shard node...
 Building API gateway...
 ```
 
 This creates binaries in the `bin/` directory:
+
 - `bin/node` - Shard node server
 - `bin/gateway` - API gateway server
 
@@ -120,32 +131,38 @@ make run-all
 ```
 
 This starts:
+
 - 4 shard nodes (ports 8001-8004)
 - 1 API gateway (port 8000)
 
 ### Option B: Start Individually (for debugging)
 
 **Terminal 1 - Shard Node 1:**
+
 ```bash
 ./bin/node -shard=1 -port=8001 -data=./data
 ```
 
 **Terminal 2 - Shard Node 2:**
+
 ```bash
 ./bin/node -shard=2 -port=8002 -data=./data
 ```
 
 **Terminal 3 - Shard Node 3:**
+
 ```bash
 ./bin/node -shard=3 -port=8003 -data=./data
 ```
 
 **Terminal 4 - Shard Node 4:**
+
 ```bash
 ./bin/node -shard=4 -port=8004 -data=./data
 ```
 
 **Terminal 5 - API Gateway:**
+
 ```bash
 ./bin/gateway -port=8000 -node1=localhost:8001 -node2=localhost:8002 -node3=localhost:8003 -node4=localhost:8004
 ```
@@ -170,6 +187,7 @@ npm run dev
 ```
 
 **Expected output:**
+
 ```
 VITE v5.4.21  ready in 332 ms
 
@@ -181,6 +199,7 @@ VITE v5.4.21  ready in 332 ms
 ## Step 7: Access the Application
 
 Open your browser and go to:
+
 ```
 http://localhost:3000
 ```
@@ -192,6 +211,7 @@ http://localhost:3000
 ### Test API Endpoints
 
 **Create a user:**
+
 ```bash
 curl -X POST http://localhost:8000/users \
   -H "Content-Type: application/json" \
@@ -199,11 +219,13 @@ curl -X POST http://localhost:8000/users \
 ```
 
 **Get all users:**
+
 ```bash
 curl http://localhost:8000/users
 ```
 
 **Check shard status:**
+
 ```bash
 curl http://localhost:8000/shards
 ```
@@ -223,6 +245,7 @@ make stop
 ```
 
 Or manually:
+
 ```bash
 pkill -f "bin/node"
 pkill -f "bin/gateway"
@@ -237,6 +260,7 @@ make clean
 ```
 
 This removes:
+
 - Built binaries (`bin/`)
 - SQLite database files (`data/`)
 
@@ -274,11 +298,13 @@ chmod +x scripts/*.sh
 ### SQLite Build Errors
 
 Ensure GCC is installed:
+
 ```bash
 gcc --version
 ```
 
 On macOS, run:
+
 ```bash
 xcode-select --install
 ```
@@ -287,14 +313,14 @@ xcode-select --install
 
 ## Quick Reference Commands
 
-| Command | Description |
-|---------|-------------|
-| `make build` | Build all binaries |
-| `make run-all` | Start all backend services |
-| `make stop` | Stop all services |
-| `make clean` | Remove binaries and data |
-| `make test` | Run integration tests |
-| `cd frontend && npm run dev` | Start frontend |
+| Command                      | Description                |
+| ---------------------------- | -------------------------- |
+| `make build`                 | Build all binaries         |
+| `make run-all`               | Start all backend services |
+| `make stop`                  | Stop all services          |
+| `make clean`                 | Remove binaries and data   |
+| `make test`                  | Run integration tests      |
+| `cd frontend && npm run dev` | Start frontend             |
 
 ---
 
