@@ -8,10 +8,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 // ShardConfig holds the configuration for a shard node
@@ -248,22 +251,55 @@ func (g *Gateway) HealthCheck(c *gin.Context) {
 }
 
 func main() {
-	port := flag.Int("port", 8000, "Gateway port")
-	node1 := flag.String("node1", "localhost:8001", "Node 1 address")
-	node2 := flag.String("node2", "localhost:8002", "Node 2 address")
-	node3 := flag.String("node3", "localhost:8003", "Node 3 address")
-	node4 := flag.String("node4", "localhost:8004", "Node 4 address")
+	// Load .env file if it exists
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using defaults and command-line flags")
+	}
+
+	// Helper function to get env with fallback
+	getEnv := func(key, fallback string) string {
+		if value := os.Getenv(key); value != "" {
+			return value
+		}
+		return fallback
+	}
+	getEnvInt := func(key string, fallback int) int {
+		if value := os.Getenv(key); value != "" {
+			if num, err := strconv.Atoi(value); err == nil {
+				return num
+			}
+		}
+		return fallback
+	}
+
+	// Build default addresses from environment variables
+	defaultNode1 := fmt.Sprintf("%s:%d", getEnv("SHARD1_HOST", "localhost"), getEnvInt("SHARD1_PORT", 8001))
+	defaultNode2 := fmt.Sprintf("%s:%d", getEnv("SHARD2_HOST", "localhost"), getEnvInt("SHARD2_PORT", 8002))
+	defaultNode3 := fmt.Sprintf("%s:%d", getEnv("SHARD3_HOST", "localhost"), getEnvInt("SHARD3_PORT", 8003))
+	defaultNode4 := fmt.Sprintf("%s:%d", getEnv("SHARD4_HOST", "localhost"), getEnvInt("SHARD4_PORT", 8004))
+
+	port := flag.Int("port", getEnvInt("GATEWAY_PORT", 8000), "Gateway port")
+	node1 := flag.String("node1", defaultNode1, "Node 1 address")
+	node2 := flag.String("node2", defaultNode2, "Node 2 address")
+	node3 := flag.String("node3", defaultNode3, "Node 3 address")
+	node4 := flag.String("node4", defaultNode4, "Node 4 address")
 	flag.Parse()
 
 	parseAddr := func(addr string, shardID int) ShardConfig {
-		var host string
-		var p int
-		fmt.Sscanf(addr, "%[^:]:%d", &host, &p)
+		host := "localhost"
+		p := 8000 + shardID
+		
+		// Split on the last colon to handle IPv4 addresses like 192.168.1.1:8003
+		lastColon := strings.LastIndex(addr, ":")
+		if lastColon != -1 {
+			host = addr[:lastColon]
+			if portNum, err := strconv.Atoi(addr[lastColon+1:]); err == nil {
+				p = portNum
+			}
+		}
+		
 		if host == "" {
 			host = "localhost"
-		}
-		if p == 0 {
-			p = 8000 + shardID
 		}
 		return ShardConfig{ShardID: shardID, Host: host, Port: p}
 	}

@@ -14,6 +14,7 @@ Complete step-by-step guide for setting up the distributed sharding system on a 
 4. Restart your terminal/PowerShell
 
 **Verify installation:**
+
 ```powershell
 go version
 ```
@@ -26,6 +27,7 @@ go version
 4. Restart your terminal/PowerShell
 
 **Verify installation:**
+
 ```powershell
 node --version
 npm --version
@@ -44,16 +46,19 @@ npm --version
 4. Add to PATH: `C:\msys64\mingw64\bin`
 
 **Option B: Using Chocolatey**
+
 ```powershell
 choco install mingw
 ```
 
 **Option C: Using Scoop**
+
 ```powershell
 scoop install gcc
 ```
 
 **Verify installation:**
+
 ```powershell
 gcc --version
 ```
@@ -65,6 +70,7 @@ gcc --version
 3. Use recommended settings (Git Bash, etc.)
 
 **Verify installation:**
+
 ```powershell
 git --version
 ```
@@ -72,11 +78,13 @@ git --version
 ### 5. Install Make (Optional but Recommended)
 
 **Using Chocolatey:**
+
 ```powershell
 choco install make
 ```
 
 **Using Scoop:**
+
 ```powershell
 scoop install make
 ```
@@ -88,6 +96,7 @@ scoop install make
 ## Step 1: Clone the Repository
 
 **PowerShell or Git Bash:**
+
 ```powershell
 git clone https://github.com/YOUR_USERNAME/GizzardDistributedSystems.git
 cd GizzardDistributedSystems\distributed-sharding
@@ -106,11 +115,13 @@ go mod download
 ## Step 3: Build the Project
 
 **Option A: Using Make (if installed)**
+
 ```powershell
 make build
 ```
 
 **Option B: Manual Build (PowerShell)**
+
 ```powershell
 # Create bin directory
 New-Item -ItemType Directory -Force -Path bin
@@ -123,6 +134,7 @@ go build -o bin/gateway.exe ./cmd/gateway
 ```
 
 **Option C: Using Git Bash**
+
 ```bash
 mkdir -p bin
 go build -o bin/node.exe ./cmd/node
@@ -138,6 +150,7 @@ New-Item -ItemType Directory -Force -Path data
 ```
 
 Or in Git Bash:
+
 ```bash
 mkdir -p data
 ```
@@ -163,30 +176,35 @@ sleep 2
 Open **5 separate PowerShell windows**:
 
 **Window 1 - Shard Node 1:**
+
 ```powershell
 cd GizzardDistributedSystems\distributed-sharding
 .\bin\node.exe -shard=1 -port=8001 -data=.\data
 ```
 
 **Window 2 - Shard Node 2:**
+
 ```powershell
 cd GizzardDistributedSystems\distributed-sharding
 .\bin\node.exe -shard=2 -port=8002 -data=.\data
 ```
 
 **Window 3 - Shard Node 3:**
+
 ```powershell
 cd GizzardDistributedSystems\distributed-sharding
 .\bin\node.exe -shard=3 -port=8003 -data=.\data
 ```
 
 **Window 4 - Shard Node 4:**
+
 ```powershell
 cd GizzardDistributedSystems\distributed-sharding
 .\bin\node.exe -shard=4 -port=8004 -data=.\data
 ```
 
 **Window 5 - API Gateway:**
+
 ```powershell
 cd GizzardDistributedSystems\distributed-sharding
 .\bin\gateway.exe -port=8000 -node1=localhost:8001 -node2=localhost:8002 -node3=localhost:8003 -node4=localhost:8004
@@ -230,6 +248,7 @@ npm run dev
 ```
 
 **Expected output:**
+
 ```
 VITE v5.4.21  ready in 332 ms
 
@@ -241,6 +260,7 @@ VITE v5.4.21  ready in 332 ms
 ## Step 8: Access the Application
 
 Open your browser and go to:
+
 ```
 http://localhost:3000
 ```
@@ -252,16 +272,19 @@ http://localhost:3000
 ### Test Using PowerShell
 
 **Create a user:**
+
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:8000/users" -Method Post -ContentType "application/json" -Body '{"id":1,"name":"Test User","email":"test@example.com"}'
 ```
 
 **Get all users:**
+
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:8000/users"
 ```
 
 **Check shard status:**
+
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:8000/shards"
 ```
@@ -286,11 +309,12 @@ curl http://localhost:8000/shards
 ### Kill All Processes
 
 **PowerShell:**
+
 ```powershell
 # Stop node processes
 Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
 
-# Stop gateway process  
+# Stop gateway process
 Get-Process gateway -ErrorAction SilentlyContinue | Stop-Process -Force
 
 # Stop PowerShell jobs (if using jobs)
@@ -305,6 +329,7 @@ Get-Job | Remove-Job
 ## Clean Up (Reset Everything)
 
 **PowerShell:**
+
 ```powershell
 cd GizzardDistributedSystems\distributed-sharding
 
@@ -322,6 +347,7 @@ Remove-Item -Recurse -Force data -ErrorAction SilentlyContinue
 ### "go: command not found"
 
 Add Go to your PATH:
+
 1. Open System Properties → Advanced → Environment Variables
 2. Add `C:\Go\bin` to PATH
 3. Restart PowerShell
@@ -329,12 +355,14 @@ Add Go to your PATH:
 ### "gcc: command not found"
 
 Ensure GCC is in your PATH:
+
 1. If using MSYS2, add `C:\msys64\mingw64\bin` to PATH
 2. Restart PowerShell
 
 ### CGO_ENABLED Error
 
 Set environment variable before building:
+
 ```powershell
 $env:CGO_ENABLED=1
 go build -o bin/node.exe ./cmd/node
@@ -353,6 +381,7 @@ taskkill /PID 1234 /F
 ### Windows Firewall Blocking
 
 Allow the apps through Windows Firewall:
+
 1. Open Windows Security → Firewall & network protection
 2. Click "Allow an app through firewall"
 3. Add `node.exe` and `gateway.exe`
@@ -372,14 +401,14 @@ Ensure backend is running on port 8000. Check browser console for CORS errors.
 
 ## Quick Reference Commands (PowerShell)
 
-| Command | Description |
-|---------|-------------|
-| `go build -o bin/node.exe ./cmd/node` | Build node |
-| `go build -o bin/gateway.exe ./cmd/gateway` | Build gateway |
-| `.\bin\node.exe -shard=1 -port=8001 -data=.\data` | Start node 1 |
-| `.\bin\gateway.exe -port=8000 ...` | Start gateway |
-| `Get-Process node \| Stop-Process` | Stop all nodes |
-| `cd frontend; npm run dev` | Start frontend |
+| Command                                           | Description    |
+| ------------------------------------------------- | -------------- |
+| `go build -o bin/node.exe ./cmd/node`             | Build node     |
+| `go build -o bin/gateway.exe ./cmd/gateway`       | Build gateway  |
+| `.\bin\node.exe -shard=1 -port=8001 -data=.\data` | Start node 1   |
+| `.\bin\gateway.exe -port=8000 ...`                | Start gateway  |
+| `Get-Process node \| Stop-Process`                | Stop all nodes |
+| `cd frontend; npm run dev`                        | Start frontend |
 
 ---
 
@@ -430,6 +459,7 @@ echo Starting API Gateway...
 ```
 
 Run with:
+
 ```powershell
 .\start-all.bat
 ```
