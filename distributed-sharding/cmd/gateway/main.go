@@ -13,9 +13,53 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
+
+// Color definitions for shard logging
+var (
+	shardColors = []*color.Color{
+		color.New(color.FgHiBlue, color.Bold),    // Shard 1 - Blue
+		color.New(color.FgHiGreen, color.Bold),   // Shard 2 - Green
+		color.New(color.FgHiYellow, color.Bold),  // Shard 3 - Yellow
+		color.New(color.FgHiMagenta, color.Bold), // Shard 4 - Magenta
+	}
+	gatewayColor = color.New(color.FgHiCyan, color.Bold)
+	successColor = color.New(color.FgGreen)
+	errorColor   = color.New(color.FgRed, color.Bold)
+	infoColor    = color.New(color.FgWhite)
+)
+
+// logShard logs a message with shard-specific formatting
+func logShard(shardID int, format string, args ...interface{}) {
+	colorIdx := (shardID - 1) % len(shardColors)
+	prefix := shardColors[colorIdx].Sprintf("[SHARD %d]", shardID)
+	message := fmt.Sprintf(format, args...)
+	log.Printf("%s %s", prefix, message)
+}
+
+// logGateway logs a gateway-level message
+func logGateway(format string, args ...interface{}) {
+	prefix := gatewayColor.Sprint("[GATEWAY]")
+	message := fmt.Sprintf(format, args...)
+	log.Printf("%s %s", prefix, message)
+}
+
+// logSuccess logs a success message
+func logSuccess(format string, args ...interface{}) {
+	prefix := successColor.Sprint("[SUCCESS]")
+	message := fmt.Sprintf(format, args...)
+	log.Printf("%s %s", prefix, message)
+}
+
+// logError logs an error message
+func logError(format string, args ...interface{}) {
+	prefix := errorColor.Sprint("[ERROR]")
+	message := fmt.Sprintf(format, args...)
+	log.Printf("%s %s", prefix, message)
+}
 
 // ShardConfig holds the configuration for a shard node
 type ShardConfig struct {
@@ -50,7 +94,7 @@ func NewGateway(shards []ShardConfig) *Gateway {
 	return &Gateway{
 		shards: shards,
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: 2 * time.Second, // Short timeout for faster failure detection
 		},
 		numShards: len(shards),
 	}
@@ -99,6 +143,7 @@ func (g *Gateway) forwardRequest(method, url string, body []byte) ([]byte, int, 
 func (g *Gateway) InsertUser(c *gin.Context) {
 	var req InsertRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logError("Invalid request body: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Invalid request body",
 			"details": err.Error(),
@@ -109,17 +154,28 @@ func (g *Gateway) InsertUser(c *gin.Context) {
 	shard := g.GetShardForUser(req.ID)
 	shardURL := fmt.Sprintf("http://%s:%d/insert", shard.Host, shard.Port)
 
-	log.Printf("Routing user %d to shard %d at %s:%d", req.ID, shard.ShardID, shard.Host, shard.Port)
+	logGateway("CREATE USER request - ID: %d, Name: %s, Email: %s", req.ID, req.Name, req.Email)
+	logShard(shard.ShardID, "Routing INSERT request to %s:%d", shard.Host, shard.Port)
 
 	bodyBytes, _ := json.Marshal(req)
+	startTime := time.Now()
 	respBody, statusCode, err := g.forwardRequest("POST", shardURL, bodyBytes)
+	duration := time.Since(startTime)
+
 	if err != nil {
+		logShard(shard.ShardID, "FAILED - Connection error: %v", err)
+		logError("Shard %d unreachable after %v", shard.ShardID, duration)
 		c.JSON(http.StatusBadGateway, gin.H{
 			"error":   "Failed to reach shard node",
 			"details": err.Error(),
 			"shard":   shard.ShardID,
 		})
 		return
+	}
+
+	logShard(shard.ShardID, "RESPONSE [%d] in %v", statusCode, duration)
+	if statusCode == http.StatusOK || statusCode == http.StatusCreated {
+		logSuccess("User %d created successfully on Shard %d", req.ID, shard.ShardID)
 	}
 
 	c.Data(statusCode, "application/json", respBody)
@@ -130,6 +186,7 @@ func (g *Gateway) GetUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		logError("Invalid user ID: %s", idStr)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid user ID",
 		})
@@ -139,10 +196,16 @@ func (g *Gateway) GetUser(c *gin.Context) {
 	shard := g.GetShardForUser(id)
 	shardURL := fmt.Sprintf("http://%s:%d/user/%d", shard.Host, shard.Port, id)
 
-	log.Printf("Routing GET user %d to shard %d at %s:%d", id, shard.ShardID, shard.Host, shard.Port)
+	logGateway("FETCH USER request - ID: %d", id)
+	logShard(shard.ShardID, "Routing GET request to %s:%d", shard.Host, shard.Port)
 
+	startTime := time.Now()
 	respBody, statusCode, err := g.forwardRequest("GET", shardURL, nil)
+	duration := time.Since(startTime)
+
 	if err != nil {
+		logShard(shard.ShardID, "FAILED - Connection error: %v", err)
+		logError("Shard %d unreachable after %v", shard.ShardID, duration)
 		c.JSON(http.StatusBadGateway, gin.H{
 			"error":   "Failed to reach shard node",
 			"details": err.Error(),
@@ -151,36 +214,77 @@ func (g *Gateway) GetUser(c *gin.Context) {
 		return
 	}
 
+	logShard(shard.ShardID, "RESPONSE [%d] in %v", statusCode, duration)
+	if statusCode == http.StatusOK {
+		logSuccess("User %d fetched from Shard %d", id, shard.ShardID)
+	} else if statusCode == http.StatusNotFound {
+		logShard(shard.ShardID, "User %d not found", id)
+	}
+
 	c.Data(statusCode, "application/json", respBody)
 }
 
 // GetAllUsers handles GET /users
 func (g *Gateway) GetAllUsers(c *gin.Context) {
-	var allUsers []map[string]interface{}
-	var errors []string
+	logGateway("FETCH ALL USERS request - Querying %d shards in parallel", len(g.shards))
 
+	type shardResult struct {
+		shardID int
+		users   []map[string]interface{}
+		err     string
+		count   int
+	}
+
+	results := make(chan shardResult, len(g.shards))
+	startTime := time.Now()
+
+	// Query all shards in parallel
 	for _, shard := range g.shards {
-		shardURL := fmt.Sprintf("http://%s:%d/users", shard.Host, shard.Port)
-		respBody, statusCode, err := g.forwardRequest("GET", shardURL, nil)
-		if err != nil {
-			errors = append(errors, fmt.Sprintf("shard %d: %v", shard.ShardID, err))
-			continue
-		}
+		go func(s ShardConfig) {
+			shardURL := fmt.Sprintf("http://%s:%d/users", s.Host, s.Port)
+			logShard(s.ShardID, "Querying users at %s:%d", s.Host, s.Port)
+			
+			respBody, statusCode, err := g.forwardRequest("GET", shardURL, nil)
+			if err != nil {
+				logShard(s.ShardID, "FAILED - %v", err)
+				results <- shardResult{shardID: s.ShardID, err: fmt.Sprintf("shard %d: %v", s.ShardID, err)}
+				return
+			}
 
-		if statusCode == http.StatusOK {
-			var shardResp map[string]interface{}
-			if err := json.Unmarshal(respBody, &shardResp); err == nil {
-				if users, ok := shardResp["users"].([]interface{}); ok {
-					for _, u := range users {
-						if userMap, ok := u.(map[string]interface{}); ok {
-							userMap["shard_id"] = shard.ShardID
-							allUsers = append(allUsers, userMap)
+			var users []map[string]interface{}
+			if statusCode == http.StatusOK {
+				var shardResp map[string]interface{}
+				if err := json.Unmarshal(respBody, &shardResp); err == nil {
+					if userList, ok := shardResp["users"].([]interface{}); ok {
+						for _, u := range userList {
+							if userMap, ok := u.(map[string]interface{}); ok {
+								userMap["shard_id"] = s.ShardID
+								users = append(users, userMap)
+							}
 						}
 					}
 				}
+				logShard(s.ShardID, "RESPONSE [200] - Found %d users", len(users))
 			}
+			results <- shardResult{shardID: s.ShardID, users: users, count: len(users)}
+		}(shard)
+	}
+
+	// Collect results
+	var allUsers []map[string]interface{}
+	var errors []string
+
+	for i := 0; i < len(g.shards); i++ {
+		result := <-results
+		if result.err != "" {
+			errors = append(errors, result.err)
+		} else {
+			allUsers = append(allUsers, result.users...)
 		}
 	}
+
+	duration := time.Since(startTime)
+	logSuccess("Fetched %d total users from %d shards in %v", len(allUsers), len(g.shards)-len(errors), duration)
 
 	response := gin.H{
 		"users": allUsers,
@@ -195,6 +299,8 @@ func (g *Gateway) GetAllUsers(c *gin.Context) {
 
 // GetShardStatus handles GET /shards
 func (g *Gateway) GetShardStatus(c *gin.Context) {
+	logGateway("HEALTH CHECK request - Checking %d shards", len(g.shards))
+
 	type ShardStatus struct {
 		ShardID   int    `json:"shard_id"`
 		Host      string `json:"host"`
@@ -203,37 +309,58 @@ func (g *Gateway) GetShardStatus(c *gin.Context) {
 		UserCount int    `json:"user_count"`
 	}
 
-	var statuses []ShardStatus
+	results := make(chan ShardStatus, len(g.shards))
+	startTime := time.Now()
 
+	// Check all shards in parallel
 	for _, shard := range g.shards {
-		status := ShardStatus{
-			ShardID: shard.ShardID,
-			Host:    shard.Host,
-			Port:    shard.Port,
-			Status:  "unknown",
-		}
+		go func(s ShardConfig) {
+			status := ShardStatus{
+				ShardID: s.ShardID,
+				Host:    s.Host,
+				Port:    s.Port,
+				Status:  "offline",
+			}
 
-		healthURL := fmt.Sprintf("http://%s:%d/health", shard.Host, shard.Port)
-		_, statusCode, err := g.forwardRequest("GET", healthURL, nil)
-		if err != nil || statusCode != http.StatusOK {
-			status.Status = "offline"
-		} else {
-			status.Status = "online"
+			logShard(s.ShardID, "Checking health at %s:%d", s.Host, s.Port)
+			healthURL := fmt.Sprintf("http://%s:%d/health", s.Host, s.Port)
+			_, statusCode, err := g.forwardRequest("GET", healthURL, nil)
+			if err == nil && statusCode == http.StatusOK {
+				status.Status = "online"
+				logShard(s.ShardID, "ONLINE - Health check passed")
 
-			usersURL := fmt.Sprintf("http://%s:%d/users", shard.Host, shard.Port)
-			respBody, _, err := g.forwardRequest("GET", usersURL, nil)
-			if err == nil {
-				var resp map[string]interface{}
-				if json.Unmarshal(respBody, &resp) == nil {
-					if count, ok := resp["count"].(float64); ok {
-						status.UserCount = int(count)
+				usersURL := fmt.Sprintf("http://%s:%d/users", s.Host, s.Port)
+				respBody, _, err := g.forwardRequest("GET", usersURL, nil)
+				if err == nil {
+					var resp map[string]interface{}
+					if json.Unmarshal(respBody, &resp) == nil {
+						if count, ok := resp["count"].(float64); ok {
+							status.UserCount = int(count)
+							logShard(s.ShardID, "Contains %d users", status.UserCount)
+						}
 					}
 				}
+			} else {
+				logShard(s.ShardID, "OFFLINE - Not responding")
 			}
-		}
 
-		statuses = append(statuses, status)
+			results <- status
+		}(shard)
 	}
+
+	// Collect results and sort by shard ID
+	statuses := make([]ShardStatus, len(g.shards))
+	onlineCount := 0
+	for i := 0; i < len(g.shards); i++ {
+		status := <-results
+		statuses[status.ShardID-1] = status
+		if status.Status == "online" {
+			onlineCount++
+		}
+	}
+
+	duration := time.Since(startTime)
+	logSuccess("Health check complete: %d/%d shards online in %v", onlineCount, len(g.shards), duration)
 
 	c.JSON(http.StatusOK, gin.H{
 		"shards":       statuses,
@@ -243,6 +370,7 @@ func (g *Gateway) GetShardStatus(c *gin.Context) {
 
 // HealthCheck returns gateway health
 func (g *Gateway) HealthCheck(c *gin.Context) {
+	logGateway("Gateway health check - OK")
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "healthy",
 		"service": "api-gateway",
