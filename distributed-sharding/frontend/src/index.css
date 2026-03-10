@@ -191,6 +191,7 @@ body {
   border-radius: 16px;
   padding: 28px;
   border: 1px solid var(--border-color);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   box-shadow: 0 4px 24px var(--shadow-color);
   transition: all 0.3s ease;
