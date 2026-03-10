@@ -95,7 +95,7 @@ function App() {
     setCreateResult(null);
 
     const effectiveShard = getEffectiveShard();
-    
+
     try {
       const response = await axios.post(`${API_BASE_URL}/users`, {
         id: parseInt(createForm.id),
@@ -143,28 +143,70 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+        <button
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+        >
           {theme === "dark" ? (
             <svg viewBox="0 0 24 24" fill="none" className="theme-icon">
-              <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2"/>
-              <path d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle
+                cx="12"
+                cy="12"
+                r="5"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+              <path
+                d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </svg>
           ) : (
             <svg viewBox="0 0 24 24" fill="none" className="theme-icon">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           )}
         </button>
         <div className="logo">
           <svg viewBox="0 0 24 24" fill="none" className="logo-icon">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path
+              d="M12 2L2 7L12 12L22 7L12 2Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M2 17L12 22L22 17"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M2 12L12 17L22 12"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           <span>Gizzard</span>
         </div>
         <h1>Distributed Database Sharding Framework</h1>
-        <p>High-performance data distribution across multiple shards with automatic load balancing</p>
+        <p>
+          High-performance data distribution across multiple shards with
+          automatic load balancing
+        </p>
       </header>
 
       <div className="container">
@@ -178,9 +220,27 @@ function App() {
               className="refresh-btn"
             >
               <svg viewBox="0 0 24 24" fill="none" className="refresh-icon">
-                <path d="M1 4V10H7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M23 20V14H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path
+                  d="M1 4V10H7"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M23 20V14H17"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               {shardLoading ? "Loading..." : "Refresh"}
             </button>
@@ -208,7 +268,9 @@ function App() {
                   </div>
                   <div className="shard-stat">
                     <span className="stat-label">IP Address</span>
-                    <span className="stat-value ip-address">{shard.host || "localhost"}</span>
+                    <span className="stat-value ip-address">
+                      {shard.host || "localhost"}
+                    </span>
                   </div>
                   <div className="shard-stat">
                     <span className="stat-label">Port</span>
@@ -286,13 +348,27 @@ function App() {
                 <small className="shard-hint">
                   {createForm.shard === "auto" ? (
                     <>
-                      Auto-assigned to <strong style={{ color: getShardColor(getAutoShard(createForm.id) || 1) }}>
-                        Shard {createForm.id ? getAutoShard(createForm.id) : "?"}
-                      </strong> based on User ID
+                      Auto-assigned to{" "}
+                      <strong
+                        style={{
+                          color: getShardColor(
+                            getAutoShard(createForm.id) || 1,
+                          ),
+                        }}
+                      >
+                        Shard{" "}
+                        {createForm.id ? getAutoShard(createForm.id) : "?"}
+                      </strong>{" "}
+                      based on User ID
                     </>
                   ) : (
                     <>
-                      Manually assigned to <strong style={{ color: getShardColor(parseInt(createForm.shard)) }}>
+                      Manually assigned to{" "}
+                      <strong
+                        style={{
+                          color: getShardColor(parseInt(createForm.shard)),
+                        }}
+                      >
                         Shard {createForm.shard}
                       </strong>
                     </>
@@ -318,17 +394,38 @@ function App() {
             {createResult && (
               <div className="result success">
                 <div className="result-header">
-                  <svg viewBox="0 0 24 24" fill="none" className="result-icon success">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" strokeWidth="2"/>
-                    <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" strokeWidth="2"/>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="result-icon success"
+                  >
+                    <path
+                      d="M22 11.08V12a10 10 0 1 1-5.93-9.14"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <polyline
+                      points="22 4 12 14.01 9 11.01"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
                   </svg>
                   <h4>User Created Successfully!</h4>
                 </div>
                 <div className="result-body">
-                  <p><strong>ID:</strong> {createResult.user?.id}</p>
-                  <p><strong>Name:</strong> {createResult.user?.name}</p>
-                  <p><strong>Email:</strong> {createResult.user?.email}</p>
-                  <p className="shard-info" style={{ color: getShardColor(createResult.shard_id) }}>
+                  <p>
+                    <strong>ID:</strong> {createResult.user?.id}
+                  </p>
+                  <p>
+                    <strong>Name:</strong> {createResult.user?.name}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {createResult.user?.email}
+                  </p>
+                  <p
+                    className="shard-info"
+                    style={{ color: getShardColor(createResult.shard_id) }}
+                  >
                     Stored in Shard {createResult.shard_id}
                   </p>
                 </div>
@@ -338,10 +435,34 @@ function App() {
             {createError && (
               <div className="result error">
                 <div className="result-header">
-                  <svg viewBox="0 0 24 24" fill="none" className="result-icon error">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2"/>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="result-icon error"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <line
+                      x1="15"
+                      y1="9"
+                      x2="9"
+                      y2="15"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <line
+                      x1="9"
+                      y1="9"
+                      x2="15"
+                      y2="15"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
                   </svg>
                   <h4>Error</h4>
                 </div>
@@ -365,7 +486,10 @@ function App() {
                   min="1"
                 />
                 <small>
-                  Will query <strong style={{ color: getShardColor(getAutoShard(fetchId) || 1) }}>
+                  Will query{" "}
+                  <strong
+                    style={{ color: getShardColor(getAutoShard(fetchId) || 1) }}
+                  >
                     Shard {fetchId ? getAutoShard(fetchId) : "?"}
                   </strong>
                 </small>
@@ -389,17 +513,38 @@ function App() {
             {fetchResult && (
               <div className="result success">
                 <div className="result-header">
-                  <svg viewBox="0 0 24 24" fill="none" className="result-icon success">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" strokeWidth="2"/>
-                    <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" strokeWidth="2"/>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="result-icon success"
+                  >
+                    <path
+                      d="M22 11.08V12a10 10 0 1 1-5.93-9.14"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <polyline
+                      points="22 4 12 14.01 9 11.01"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
                   </svg>
                   <h4>User Found!</h4>
                 </div>
                 <div className="result-body">
-                  <p><strong>ID:</strong> {fetchResult.user?.id}</p>
-                  <p><strong>Name:</strong> {fetchResult.user?.name}</p>
-                  <p><strong>Email:</strong> {fetchResult.user?.email}</p>
-                  <p className="shard-info" style={{ color: getShardColor(fetchResult.shard_id) }}>
+                  <p>
+                    <strong>ID:</strong> {fetchResult.user?.id}
+                  </p>
+                  <p>
+                    <strong>Name:</strong> {fetchResult.user?.name}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {fetchResult.user?.email}
+                  </p>
+                  <p
+                    className="shard-info"
+                    style={{ color: getShardColor(fetchResult.shard_id) }}
+                  >
                     Retrieved from Shard {fetchResult.shard_id}
                   </p>
                 </div>
@@ -409,10 +554,34 @@ function App() {
             {fetchError && (
               <div className="result error">
                 <div className="result-header">
-                  <svg viewBox="0 0 24 24" fill="none" className="result-icon error">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2"/>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="result-icon error"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <line
+                      x1="15"
+                      y1="9"
+                      x2="9"
+                      y2="15"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <line
+                      x1="9"
+                      y1="9"
+                      x2="15"
+                      y2="15"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
                   </svg>
                   <h4>Error</h4>
                 </div>
@@ -432,9 +601,27 @@ function App() {
               className="refresh-btn"
             >
               <svg viewBox="0 0 24 24" fill="none" className="refresh-icon">
-                <path d="M1 4V10H7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M23 20V14H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path
+                  d="M1 4V10H7"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M23 20V14H17"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               {allUsersLoading ? "Loading..." : "Refresh"}
             </button>
@@ -443,10 +630,34 @@ function App() {
           {allUsers.length === 0 ? (
             <div className="empty-state">
               <svg viewBox="0 0 24 24" fill="none" className="empty-icon">
-                <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path
+                  d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               <p>No users found</p>
               <span>Create some users using the form above!</span>
