@@ -34,6 +34,25 @@ function App() {
   const [shardStatus, setShardStatus] = useState([]);
   const [shardLoading, setShardLoading] = useState(false);
 
+  // Algorithm states
+  const [activeAlgoTab, setActiveAlgoTab] = useState("clocks");
+  const [clocksData, setClocksData] = useState(null);
+  const [clocksLoading, setClocksLoading] = useState(false);
+  const [eventsData, setEventsData] = useState(null);
+  const [snapshotResult, setSnapshotResult] = useState(null);
+  const [snapshotLoading, setSnapshotLoading] = useState(false);
+  const [snapshotStates, setSnapshotStates] = useState(null);
+  const [snapshotStatesLoading, setSnapshotStatesLoading] = useState(false);
+  const [electionResult, setElectionResult] = useState(null);
+  const [electionLoading, setElectionLoading] = useState(false);
+  const [leaderStatus, setLeaderStatus] = useState(null);
+  const [leaderLoading, setLeaderLoading] = useState(false);
+  const [hashRingStatus, setHashRingStatus] = useState(null);
+  const [hashRingLoading, setHashRingLoading] = useState(false);
+  const [lookupKey, setLookupKey] = useState("");
+  const [lookupResult, setLookupResult] = useState(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+
   // Apply theme to document
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -139,6 +158,117 @@ function App() {
     const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
     return colors[(shardId - 1) % colors.length];
   };
+
+  // =============================================
+  // Algorithm Handlers
+  // =============================================
+
+  const fetchClocks = async () => {
+    setClocksLoading(true);
+    try {
+      const [clocksRes, eventsRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/clocks`),
+        axios.get(`${API_BASE_URL}/events`),
+      ]);
+      setClocksData(clocksRes.data);
+      setEventsData(eventsRes.data);
+    } catch (err) {
+      console.error("Failed to fetch clocks:", err);
+    } finally {
+      setClocksLoading(false);
+    }
+  };
+
+  const triggerSnapshot = async () => {
+    setSnapshotLoading(true);
+    setSnapshotResult(null);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/snapshot`, {});
+      setSnapshotResult(response.data);
+      // After a short delay, fetch snapshot states
+      setTimeout(fetchSnapshotStates, 1000);
+    } catch (err) {
+      setSnapshotResult({ error: err.response?.data?.error || err.message });
+    } finally {
+      setSnapshotLoading(false);
+    }
+  };
+
+  const fetchSnapshotStates = async () => {
+    setSnapshotStatesLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/snapshot`);
+      setSnapshotStates(response.data);
+    } catch (err) {
+      console.error("Failed to fetch snapshot states:", err);
+    } finally {
+      setSnapshotStatesLoading(false);
+    }
+  };
+
+  const triggerElection = async () => {
+    setElectionLoading(true);
+    setElectionResult(null);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/election/start`, {});
+      setElectionResult(response.data);
+      // After a short delay, fetch leader status
+      setTimeout(fetchLeaderStatus, 1500);
+    } catch (err) {
+      setElectionResult({ error: err.response?.data?.error || err.message });
+    } finally {
+      setElectionLoading(false);
+    }
+  };
+
+  const fetchLeaderStatus = async () => {
+    setLeaderLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/election/leader`);
+      setLeaderStatus(response.data);
+    } catch (err) {
+      console.error("Failed to fetch leader status:", err);
+    } finally {
+      setLeaderLoading(false);
+    }
+  };
+
+  const fetchHashRingStatus = async () => {
+    setHashRingLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/hash-ring/status`);
+      setHashRingStatus(response.data);
+    } catch (err) {
+      console.error("Failed to fetch hash ring:", err);
+    } finally {
+      setHashRingLoading(false);
+    }
+  };
+
+  const lookupHashKey = async (e) => {
+    e.preventDefault();
+    if (!lookupKey) return;
+    setLookupLoading(true);
+    setLookupResult(null);
+    try {
+      const payload = /^\d+$/.test(lookupKey)
+        ? { user_id: parseInt(lookupKey) }
+        : { key: lookupKey };
+      const response = await axios.post(`${API_BASE_URL}/hash-ring/lookup`, payload);
+      setLookupResult(response.data);
+    } catch (err) {
+      setLookupResult({ error: err.response?.data?.error || err.message });
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const algoTabs = [
+    { id: "clocks", label: "⏱ Vector Clocks", color: "#3b82f6" },
+    { id: "snapshot", label: "📸 Snapshot", color: "#10b981" },
+    { id: "election", label: "👑 Election", color: "#f59e0b" },
+    { id: "hashing", label: "🔗 Hashing", color: "#8b5cf6" },
+  ];
 
   return (
     <div className="app">
@@ -697,6 +827,322 @@ function App() {
           )}
         </section>
 
+        {/* =============================================
+            ALGORITHMS DASHBOARD
+            ============================================= */}
+        <section className="section algo-dashboard">
+          <div className="section-header">
+            <h2>🧪 Distributed Algorithms Dashboard</h2>
+          </div>
+          <p className="algo-subtitle">
+            Trigger and visualize distributed systems algorithms running across all shard nodes
+          </p>
+
+          {/* Algorithm Tabs */}
+          <div className="algo-tabs">
+            {algoTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`algo-tab ${activeAlgoTab === tab.id ? "active" : ""}`}
+                onClick={() => setActiveAlgoTab(tab.id)}
+                style={activeAlgoTab === tab.id ? { borderColor: tab.color, color: tab.color } : {}}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Vector Clocks Panel */}
+          {activeAlgoTab === "clocks" && (
+            <div className="algo-panel">
+              <div className="algo-info">
+                <h3>⏱ Lamport / Vector Clocks</h3>
+                <p>Each node maintains a vector of logical timestamps to track causal ordering of events. Vector clocks tick automatically on every user operation (create/read).</p>
+              </div>
+              <button
+                onClick={fetchClocks}
+                disabled={clocksLoading}
+                className="submit-btn algo-trigger-btn"
+                style={{ background: "linear-gradient(135deg, #3b82f6, #2563eb)" }}
+              >
+                {clocksLoading ? (
+                  <><span className="spinner"></span> Fetching...</>
+                ) : (
+                  "📡 Fetch Vector Clocks"
+                )}
+              </button>
+
+              {clocksData && (
+                <div className="algo-results">
+                  <h4>Node Clocks</h4>
+                  <div className="clock-grid">
+                    {clocksData.clocks?.map((clock, idx) => (
+                      <div key={idx} className="clock-card">
+                        <div className="clock-node-id">{clock.node_id || `Node ${idx + 1}`}</div>
+                        <div className="clock-vector">
+                          {clock.vector_clock && Object.entries(clock.vector_clock).map(([node, val]) => (
+                            <div key={node} className="clock-entry">
+                              <span className="clock-key">{node}</span>
+                              <span className="clock-val">{val}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="clock-event-count">
+                          {clock.event_count || 0} events logged
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {eventsData && eventsData.events && eventsData.events.length > 0 && (
+                    <div className="events-section">
+                      <h4>Recent Events ({eventsData.event_count})</h4>
+                      <div className="events-list">
+                        {eventsData.events.slice(-10).reverse().map((event, idx) => (
+                          <div key={idx} className="event-item">
+                            <span className="event-type">{event.event_type}</span>
+                            <span className="event-desc">{event.description}</span>
+                            <span className="event-node">{event.node_id}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Chandy-Lamport Snapshot Panel */}
+          {activeAlgoTab === "snapshot" && (
+            <div className="algo-panel">
+              <div className="algo-info">
+                <h3>📸 Chandy-Lamport Snapshot</h3>
+                <p>Captures a consistent global snapshot across all nodes without stopping the system. Uses marker messages to record local states and channel states between nodes.</p>
+              </div>
+              <div className="algo-btn-row">
+                <button
+                  onClick={triggerSnapshot}
+                  disabled={snapshotLoading}
+                  className="submit-btn algo-trigger-btn"
+                  style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
+                >
+                  {snapshotLoading ? (
+                    <><span className="spinner"></span> Capturing...</>
+                  ) : (
+                    "📸 Take Global Snapshot"
+                  )}
+                </button>
+                <button
+                  onClick={fetchSnapshotStates}
+                  disabled={snapshotStatesLoading}
+                  className="refresh-btn"
+                >
+                  {snapshotStatesLoading ? "Loading..." : "🔄 Refresh States"}
+                </button>
+              </div>
+
+              {snapshotResult && (
+                <div className="algo-results">
+                  <h4>Snapshot Initiated</h4>
+                  <div className="algo-result-card success">
+                    <p><strong>Snapshot ID:</strong> {snapshotResult.snapshot_id}</p>
+                    <p><strong>Initiated from:</strong> Shard {snapshotResult.initiated_at}</p>
+                    <p><strong>Message:</strong> {snapshotResult.message || snapshotResult.error}</p>
+                  </div>
+                </div>
+              )}
+
+              {snapshotStates && (
+                <div className="algo-results">
+                  <h4>Snapshot States from All Nodes</h4>
+                  <div className="snapshot-grid">
+                    {snapshotStates.snapshots?.map((snap, idx) => (
+                      <div key={idx} className="snapshot-card">
+                        <div className="snapshot-node">{snap.node_id || `Node ${idx + 1}`}</div>
+                        {snap.snapshot ? (
+                          <div className="snapshot-details">
+                            <p><strong>Status:</strong> {snap.snapshot.completed ? "✅ Complete" : "⏳ In Progress"}</p>
+                            <p><strong>Users:</strong> {snap.snapshot.local_state?.user_count ?? "N/A"}</p>
+                            <p><strong>Recorded at:</strong> {snap.snapshot.recorded_at ? new Date(snap.snapshot.recorded_at).toLocaleTimeString() : "N/A"}</p>
+                          </div>
+                        ) : (
+                          <div className="snapshot-details">
+                            <p>Snapshots: {snap.snapshots ? Object.keys(snap.snapshots).length : 0}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Leader Election Panel */}
+          {activeAlgoTab === "election" && (
+            <div className="algo-panel">
+              <div className="algo-info">
+                <h3>👑 Bully Leader Election</h3>
+                <p>The Bully algorithm elects a coordinator node. When triggered, nodes with lower IDs send ELECTION messages to higher-ID nodes. If no higher node responds, the sender declares itself leader. The highest-ID alive node always wins.</p>
+              </div>
+              <div className="algo-btn-row">
+                <button
+                  onClick={triggerElection}
+                  disabled={electionLoading}
+                  className="submit-btn algo-trigger-btn"
+                  style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
+                >
+                  {electionLoading ? (
+                    <><span className="spinner"></span> Electing...</>
+                  ) : (
+                    "👑 Trigger Election"
+                  )}
+                </button>
+                <button
+                  onClick={fetchLeaderStatus}
+                  disabled={leaderLoading}
+                  className="refresh-btn"
+                >
+                  {leaderLoading ? "Loading..." : "🔄 Check Leader"}
+                </button>
+              </div>
+
+              {electionResult && (
+                <div className="algo-results">
+                  <h4>Election Triggered</h4>
+                  <div className="algo-result-card success">
+                    <p><strong>From Node:</strong> {electionResult.from_node}</p>
+                    <p><strong>Message:</strong> {electionResult.message || electionResult.error}</p>
+                  </div>
+                </div>
+              )}
+
+              {leaderStatus && (
+                <div className="algo-results">
+                  <h4>Leader Status (All Nodes)</h4>
+                  <div className="election-grid">
+                    {leaderStatus.nodes?.map((node, idx) => {
+                      const state = node.state || {};
+                      return (
+                        <div key={idx} className={`election-card ${state.is_leader ? "is-leader" : ""}`}>
+                          <div className="election-node">
+                            Node {state.node_id || node.node_id}
+                            {state.is_leader && <span className="leader-crown">👑</span>}
+                          </div>
+                          <div className="election-details">
+                            <p><strong>Leader:</strong> Node {state.current_leader}</p>
+                            <p><strong>Is Leader:</strong> {state.is_leader ? "Yes" : "No"}</p>
+                            <p><strong>Term:</strong> {state.election_term}</p>
+                            <p><strong>Electing:</strong> {state.election_active ? "Yes" : "No"}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Consistent Hashing Panel */}
+          {activeAlgoTab === "hashing" && (
+            <div className="algo-panel">
+              <div className="algo-info">
+                <h3>🔗 Consistent Hashing</h3>
+                <p>Uses a hash ring with 150 virtual nodes per physical node. Keys are mapped to the nearest clockwise node on the ring. Adding/removing nodes only redistributes ~1/N of the keys.</p>
+              </div>
+              <div className="algo-btn-row">
+                <button
+                  onClick={fetchHashRingStatus}
+                  disabled={hashRingLoading}
+                  className="submit-btn algo-trigger-btn"
+                  style={{ background: "linear-gradient(135deg, #8b5cf6, #7c3aed)" }}
+                >
+                  {hashRingLoading ? (
+                    <><span className="spinner"></span> Loading...</>
+                  ) : (
+                    "🔗 View Hash Ring"
+                  )}
+                </button>
+              </div>
+
+              {hashRingStatus && (
+                <div className="algo-results">
+                  <h4>Hash Ring Status</h4>
+                  <div className="hashring-stats">
+                    <div className="hashring-stat">
+                      <span className="stat-label">Physical Nodes</span>
+                      <span className="stat-value">{hashRingStatus.hash_ring?.nodes?.length || 0}</span>
+                    </div>
+                    <div className="hashring-stat">
+                      <span className="stat-label">Virtual Nodes/Node</span>
+                      <span className="stat-value">{hashRingStatus.hash_ring?.virtual_nodes_per_node || 0}</span>
+                    </div>
+                    <div className="hashring-stat">
+                      <span className="stat-label">Total VNodes</span>
+                      <span className="stat-value">{hashRingStatus.hash_ring?.total_virtual_nodes || 0}</span>
+                    </div>
+                  </div>
+
+                  {hashRingStatus.hash_ring?.key_distribution_pct && (
+                    <div className="distribution-section">
+                      <h4>Key Distribution</h4>
+                      <div className="distribution-bars">
+                        {Object.entries(hashRingStatus.hash_ring.key_distribution_pct).map(([node, pct]) => (
+                          <div key={node} className="dist-bar-row">
+                            <span className="dist-label">{node}</span>
+                            <div className="dist-bar-bg">
+                              <div
+                                className="dist-bar-fill"
+                                style={{ width: `${pct}%`, background: getShardColor(parseInt(node.replace(/\D/g, '')) || 1) }}
+                              ></div>
+                            </div>
+                            <span className="dist-pct">{pct.toFixed(1)}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Key Lookup */}
+              <div className="algo-lookup">
+                <h4>🔍 Key Lookup</h4>
+                <form onSubmit={lookupHashKey} className="lookup-form">
+                  <input
+                    type="text"
+                    value={lookupKey}
+                    onChange={(e) => setLookupKey(e.target.value)}
+                    placeholder="Enter user ID or key (e.g. 42 or my_key)"
+                    className="lookup-input"
+                  />
+                  <button
+                    type="submit"
+                    disabled={lookupLoading}
+                    className="submit-btn secondary"
+                    style={{ minWidth: "120px" }}
+                  >
+                    {lookupLoading ? "..." : "Lookup"}
+                  </button>
+                </form>
+
+                {lookupResult && !lookupResult.error && (
+                  <div className="algo-result-card success">
+                    <p><strong>Key:</strong> {lookupResult.key}</p>
+                    <p><strong>Assigned Node:</strong> <span style={{ color: getShardColor(parseInt(String(lookupResult.assigned_node).replace(/\D/g, '')) || 1), fontWeight: 700 }}>{lookupResult.assigned_node}</span></p>
+                    {lookupResult.comparison && (
+                      <p><strong>Comparison:</strong> {lookupResult.comparison}</p>
+                    )}
+                    <p><strong>Key Hash:</strong> <code>{lookupResult.key_hash}</code></p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+
         {/* Architecture Diagram */}
         <section className="section architecture">
           <h2>System Architecture</h2>
@@ -712,7 +1158,8 @@ function App() {
               │    API Gateway (Port 8000)          │
               │    ├── Request Routing              │
               │    ├── Load Balancing               │
-              │    └── Shard Selection              │
+              │    ├── Consistent Hashing           │
+              │    └── Algorithm Orchestration      │
               └─────────────────┬───────────────────┘
                                 │
         ┌───────────┬───────────┼───────────┬───────────┐
@@ -721,6 +1168,9 @@ function App() {
    ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐      │
    │ Shard 1 │ │ Shard 2 │ │ Shard 3 │ │ Shard 4 │      │
    │  :8001  │ │  :8002  │ │  :8003  │ │  :8004  │      │
+   │ VClock  │ │ VClock  │ │ VClock  │ │ VClock  │      │
+   │ Snap    │ │ Snap    │ │ Snap    │ │ Snap    │      │
+   │ Bully   │ │ Bully   │ │ Bully   │ │ Bully   │      │
    └─────────┘ └─────────┘ └─────────┘ └─────────┘      │
 `}
             </pre>
@@ -734,6 +1184,13 @@ function App() {
                 <span>User 4 → Shard 4</span>
                 <span>User 5 → Shard 1</span>
                 <span>...</span>
+              </div>
+              <h4 style={{ marginTop: "16px" }}>Algorithms</h4>
+              <div className="formula-examples">
+                <span>⏱ Vector Clocks</span>
+                <span>📸 Chandy-Lamport</span>
+                <span>👑 Bully Election</span>
+                <span>🔗 Consistent Hash</span>
               </div>
             </div>
           </div>
@@ -749,3 +1206,4 @@ function App() {
 }
 
 export default App;
+
